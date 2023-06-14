@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_game_of_life/game_of_life_widget.dart';
 
 void main() {
   runApp(const MainApp());
@@ -11,10 +12,10 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+          body: GameOfLifeWidget(
+        width: double.infinity,
+        height: double.infinity,
+      )),
     );
   }
 }
