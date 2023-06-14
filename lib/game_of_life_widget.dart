@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_game_of_life/game_painter.dart';
 
 class GameOfLifeWidget extends StatefulWidget {
@@ -13,33 +14,32 @@ class GameOfLifeWidget extends StatefulWidget {
 
 class _GameOfLifeWidgetState extends State<GameOfLifeWidget>
     with SingleTickerProviderStateMixin {
-  late AnimationController _tickerController;
+  late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
 
-    _tickerController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(
-        seconds: 1,
-      ),
+      duration: const Duration(seconds: 1),
     )..forward();
 
-    _tickerController.addListener(() {
-      if (_tickerController.isCompleted) {
-        _tickerController.repeat();
+    _controller.addListener(() {
+      if (_controller.isCompleted) {
+        _controller.repeat();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
+      color: Colors.red,
       height: widget.height,
       width: widget.width,
       child: CustomPaint(
-        painter: GamePainter(_tickerController),
+        painter: GamePainter(_controller),
       ),
     );
   }
