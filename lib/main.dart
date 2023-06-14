@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_game_of_life/game_of_life.dart';
 import 'package:flutter_game_of_life/game_of_life_widget.dart';
 
 void main() {
@@ -10,11 +11,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
           body: GameOfLifeWidget(
-        width: double.infinity,
-        height: double.infinity,
+        game: Game(
+          Patterns.hive(),
+        ),
       )),
     );
   }

@@ -1,37 +1,49 @@
 import 'package:flutter/material.dart';
 
-class GamePainter extends CustomPainter {
-  final Listenable ticker;
+import 'game_of_life.dart';
 
-  GamePainter(this.ticker) : super(repaint: ticker);
+class GamePainter extends CustomPainter {
+  final Game game;
+
+  GamePainter(this.game);
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Paints
+    // Define a paint object
     final linesPaint = Paint()
-      ..color = Colors.black
+      ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+      ..color = Colors.black;
 
-    // Painting the grid
-    for (var x = 0.0; x <= size.width;) {
-      final xPath = Path();
+    final boxPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.blue;
 
-      xPath.moveTo(x, 0);
-      xPath.lineTo(x, size.height);
+    final dx = size.width / game.grid.xCount;
+    final dy = size.height / game.grid.yCount;
 
-      canvas.drawPath(xPath, linesPaint);
-      x += 10;
+    // Active cells
+    for (var entry in game.grid.field.entries) {
+      final point = entry.key;
+      if (entry.value) {
+        final rect = Rect.fromLTWH(point.x * dx, point.y * dy, dx, dy);
+        canvas.drawRect(rect, boxPaint);
+      }
     }
+    // grid
+    for (var x = 0; x <= game.grid.xCount; x++) {
+      for (var y = 0; y <= game.grid.yCount; y++) {
+        final xPath = Path();
+        xPath.moveTo(x * dx, 0);
+        xPath.lineTo(x * dx, size.height);
 
-    for (var y = 0.0; y <= size.height;) {
-      final yPath = Path();
+        final yPath = Path();
+        yPath.moveTo(0, y * dy);
+        yPath.lineTo(size.width, y * dy);
 
-      yPath.moveTo(0, y);
-      yPath.lineTo(size.width, y);
-
-      canvas.drawPath(yPath, linesPaint);
-      y += 10;
+        canvas.drawPath(xPath, linesPaint);
+        canvas.drawPath(yPath, linesPaint);
+      }
     }
   }
 
