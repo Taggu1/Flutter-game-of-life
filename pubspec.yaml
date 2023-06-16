@@ -10,7 +10,7 @@ dependencies:
   chaleno: ^0.0.6
   flutter:
     sdk: flutter
-  touchable: ^1.0.0
+  touchable: ^1.0.2
 
 dev_dependencies:
   flutter_test:

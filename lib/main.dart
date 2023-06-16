@@ -19,16 +19,7 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: GameOfLifeWidget(
-          game: Game(
-            Grid(
-              xCount: width < 560 ? 20 : 54,
-              yCount: 24,
-            ),
-          ),
-        ),
-      ),
+      home: GameOfLifeWidget(),
     );
   }
 }

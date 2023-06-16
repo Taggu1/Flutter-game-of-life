@@ -1,97 +1,89 @@
-class CellState {
-  final bool alive;
+import 'dart:async';
 
-  CellState(this.alive);
+class GameOfLife {
+  static const worldSize = 1024;
+  static const rowLength = 32;
+  static const cellMargin = 0;
+  final _world = List.generate(
+    worldSize,
+    (index) => false,
+  );
+  final StreamController<double> _stateController = StreamController<double>();
+  var _running = false;
 
-  bool reactToNeighbours(int neighbours) {
-    if (neighbours == 3) {
-      return true;
-    } else if (neighbours != 2) {
-      return false;
-    }
-
-    return alive;
-  }
-}
-
-class Point {
-  final int x;
-  final int y;
-
-  const Point(this.x, this.y);
-
-  operator +(covariant Point other) => Point(x + other.x, y + other.y);
-
-  @override
-  int get hashCode => x ^ y;
-
-  @override
-  bool operator ==(Object other) {
-    if (other is Point) {
-      return x == other.x && y == other.y;
-    }
-    return false;
+  void toggleGame() {
+    _running = !_running;
+    _runTheGame();
   }
 
-  @override
-  String toString() => '($x, $y)';
-}
+  List<bool> get world => _world;
+  bool get running => _running;
+  StreamController<double> get stateController => _stateController;
 
-class Grid {
-  final int xCount;
-  final int yCount;
-  final List<Point> alivePoints;
-  Map<Point, bool> field = {};
-
-  Grid(
-      {required this.xCount,
-      required this.yCount,
-      this.alivePoints = const []}) {
-    for (var point in alivePoints) {
-      field[point] = true;
-    }
+  void changeCellState(int index) {
+    _world[index] = !_world[index];
+    _stateController.add(0);
   }
 
-  static List<Point> neighbourPoints = const [
-    Point(-1, -1),
-    Point(0, -1),
-    Point(1, -1),
-    Point(-1, 0),
-    Point(1, 0),
-    Point(-1, 1),
-    Point(0, 1),
-    Point(1, 1),
-  ];
+  void resetWorld() {
+    _world.fillRange(0, worldSize, false);
+  }
 
-  int countLiveNeighbours(Point point) =>
-      neighbourPoints.where((offset) => field[point + offset] == true).length;
-
-  void iterate({required Function(Point) onUpdate}) {
-    for (var x = 0; x < xCount; x++) {
-      for (var y = 0; y < yCount; y++) {
-        onUpdate(
-          Point(x, y),
-        );
+  Future<void> _runTheGame() async {
+    while (_running) {
+      await Future.delayed(Duration(milliseconds: 200));
+      var newWorld = List<bool>.from(_world);
+      for (var i = 0; i < worldSize; ++i) {
+        //In case x cell alive do this
+        var livingNeighbors = _countLivingCellsNearby(i);
+        if (livingNeighbors < 2 || livingNeighbors > 3) {
+          //die
+          newWorld[i] = false;
+        } else if (_world[i] &&
+            (livingNeighbors == 2 || livingNeighbors == 3)) {
+          //life
+          newWorld[i] = true;
+        } else if (!_world[i] && livingNeighbors == 3) {
+          //life
+          newWorld[i] = true;
+        }
+        _world[i] = newWorld[i];
       }
+      _stateController.add(0);
     }
   }
-}
 
-class Game {
-  final Grid grid;
+  int _countLivingCellsNearby(int cellIndexToCheck) {
+    final left = cellIndexToCheck % rowLength == 0
+        ? cellIndexToCheck + (rowLength - 1)
+        : cellIndexToCheck - 1;
+    final right = (cellIndexToCheck + 1) % rowLength == 0
+        ? cellIndexToCheck - (rowLength - 1)
+        : cellIndexToCheck + 1;
+    final top = cellIndexToCheck <= (rowLength - 1)
+        ? worldSize - (rowLength - cellIndexToCheck).abs()
+        : cellIndexToCheck - rowLength;
+    final bottom = cellIndexToCheck >= (worldSize - rowLength)
+        ? ((worldSize - rowLength) - cellIndexToCheck).abs()
+        : cellIndexToCheck + rowLength;
+    final topLeft = top % rowLength == 0 ? top + (rowLength - 1) : top - 1;
+    final topRight =
+        (top + 1) % rowLength == 0 ? top - (rowLength - 1) : top + 1;
+    final bottomLeft =
+        bottom % rowLength == 0 ? bottom + (rowLength - 1) : bottom - 1;
+    final bottomRight =
+        (bottom + 1) % rowLength == 0 ? bottom - (rowLength - 1) : bottom + 1;
+    return _boolToInt(_world[left]) +
+        _boolToInt(_world[right]) +
+        _boolToInt(_world[top]) +
+        _boolToInt(_world[bottom]) +
+        _boolToInt(_world[topLeft]) +
+        _boolToInt(_world[topRight]) +
+        _boolToInt(_world[bottomLeft]) +
+        _boolToInt(_world[bottomRight]);
+  }
 
-  const Game(this.grid);
-
-  void tick() {
-    final newField = <Point, bool>{};
-
-    grid.iterate(onUpdate: (point) {
-      final cellState = CellState(grid.field[point] ?? false);
-      final liveNeighbours = grid.countLiveNeighbours(point);
-
-      newField[point] = cellState.reactToNeighbours(liveNeighbours);
-    });
-
-    grid.field = newField;
+  int _boolToInt(bool input) {
+    return input ? 1 : 0;
   }
 }
