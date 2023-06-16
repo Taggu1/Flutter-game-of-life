@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_game_of_life/game_painter.dart';
+import 'package:touchable/touchable.dart';
 
 import 'game_of_life.dart';
 
@@ -33,16 +34,48 @@ class _GameOfLifeWidgetState extends State<GameOfLifeWidget>
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: game.grid.xCount / game.grid.yCount,
-      child: Container(
-        color: Colors.red,
-        height: double.infinity,
-        width: double.infinity,
-        child: CustomPaint(
-          painter: GamePainter(game),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AspectRatio(
+              aspectRatio: game.grid.xCount / game.grid.yCount,
+              child: SizedBox(
+                height: double.infinity,
+                width: double.infinity,
+                child: CanvasTouchDetector(
+                  builder: (context) {
+                    return CustomPaint(
+                      painter: GamePainter(
+                        context,
+                        game,
+                      ),
+                    );
+                  },
+                  gesturesToOverride: [
+                    GestureType.onTapDown,
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
+        TextButton(
+          onPressed: () {
+            if (_ticker.isActive) {
+              _ticker.stop();
+            } else {
+              _ticker.start();
+            }
+            setState(() {});
+          },
+          child: Text(
+            _ticker.isActive ? "Stop" : "Start",
+          ),
+        ),
+      ],
     );
   }
 }
