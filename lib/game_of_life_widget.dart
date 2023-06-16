@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_game_of_life/game_board.dart';
 import 'package:flutter_game_of_life/game_of_life.dart';
 import 'package:touchable/touchable.dart';
@@ -31,6 +32,12 @@ class _GameOfLifeWidgetState extends State<GameOfLifeWidget> {
     });
   }
 
+  void _resetGame() {
+    setState(() {
+      _game.resetWorld();
+    });
+  }
+
   @override
   Widget build(BuildContext contGameOfLifeext) {
     final screenSize = MediaQuery.of(context).size;
@@ -48,13 +55,32 @@ class _GameOfLifeWidgetState extends State<GameOfLifeWidget> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleGame,
-        tooltip: 'Start/Stop',
-        child: _game.running
-            ? const Icon(Icons.pause)
-            : const Icon(Icons.play_arrow),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        children: [
+          FloatingActionButton.small(
+            onPressed: _toggleGame,
+            tooltip: 'Start/Stop',
+            child: _game.running
+                ? const Icon(Icons.pause)
+                : const Icon(Icons.play_arrow),
+          ),
+          FloatingActionButton.small(
+            heroTag: null,
+            onPressed: _resetGame,
+            child: const Icon(Icons.restart_alt),
+          ),
+        ],
       ),
     );
   }
 }
+
+
+// FloatingActionButton(
+//         onPressed: _toggleGame,
+//         tooltip: 'Start/Stop',
+//         child: _game.running
+//             ? const Icon(Icons.pause)
+//             : const Icon(Icons.play_arrow),
+//       ),

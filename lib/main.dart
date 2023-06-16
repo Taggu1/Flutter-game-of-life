@@ -13,10 +13,12 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     return MaterialApp(
-      theme: ThemeData(),
-      themeMode: ThemeMode.dark,
-      darkTheme: ThemeData.dark(
-        useMaterial3: true,
+      theme: ThemeData(
+        primaryColor: Colors.amber,
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color.fromRGBO(49, 50, 68, 1),
+          foregroundColor: Color.fromRGBO(205, 214, 244, 1),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       home: GameOfLifeWidget(),

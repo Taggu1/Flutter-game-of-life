@@ -33,7 +33,7 @@ class GameBoard extends StatelessWidget {
                   ),
                 );
               },
-              gesturesToOverride: [
+              gesturesToOverride: const [
                 GestureType.onTapDown,
               ],
             ),
