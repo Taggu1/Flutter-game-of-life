@@ -1,89 +1,90 @@
-import 'dart:async';
+import 'dart:math';
+
+import 'package:flutter_game_of_life/utils.dart';
 
 class GameOfLife {
-  static const worldSize = 1024;
-  static const rowLength = 32;
-  static const cellMargin = 0;
-  final _world = List.generate(
-    worldSize,
-    (index) => false,
-  );
-  final StreamController<double> _stateController = StreamController<double>();
-  var _running = false;
-
-  void toggleGame() {
-    _running = !_running;
-    _runTheGame();
+  final double cellSize;
+  List<List<bool>> _world = [];
+  int rowsCount;
+  int columnsCount;
+  bool _playing = true;
+  List<List<bool>> get world => _world;
+  bool get playing => _playing;
+  GameOfLife({
+    required this.rowsCount,
+    required this.columnsCount,
+    required this.cellSize,
+  }) {
+    _world = createEmptyCells();
+    createRandomCells();
   }
 
-  List<bool> get world => _world;
-  bool get running => _running;
-  StreamController<double> get stateController => _stateController;
-
-  void changeCellState(int index) {
-    _world[index] = !_world[index];
-    _stateController.add(0);
+  void switchGameState() {
+    _playing = !_playing;
   }
 
-  void resetWorld() {
-    _world.fillRange(0, worldSize, false);
+  void changeCellState(int x, int y) {
+    _world[x][y] = !_world[x][y];
+
+    compute();
   }
 
-  Future<void> _runTheGame() async {
-    while (_running) {
-      await Future.delayed(Duration(milliseconds: 200));
-      var newWorld = List<bool>.from(_world);
-      for (var i = 0; i < worldSize; ++i) {
-        //In case x cell alive do this
-        var livingNeighbors = _countLivingCellsNearby(i);
-        if (livingNeighbors < 2 || livingNeighbors > 3) {
-          //die
-          newWorld[i] = false;
-        } else if (_world[i] &&
-            (livingNeighbors == 2 || livingNeighbors == 3)) {
-          //life
-          newWorld[i] = true;
-        } else if (!_world[i] && livingNeighbors == 3) {
-          //life
-          newWorld[i] = true;
-        }
-        _world[i] = newWorld[i];
+  void reset() {
+    _world = createEmptyCells();
+  }
+
+  List<List<bool>> createEmptyCells() {
+    return List.generate(
+      columnsCount,
+      (i) => List.filled(
+        rowsCount,
+        false,
+      ),
+    );
+  }
+
+  void createRandomCells() {
+    final nextGen = createEmptyCells();
+    for (int i = 0; i < columnsCount; i++) {
+      for (int j = 0; j < rowsCount; j++) {
+        nextGen[i][j] = Random().nextBool();
       }
-      _stateController.add(0);
     }
+    _world = nextGen;
   }
 
-  int _countLivingCellsNearby(int cellIndexToCheck) {
-    final left = cellIndexToCheck % rowLength == 0
-        ? cellIndexToCheck + (rowLength - 1)
-        : cellIndexToCheck - 1;
-    final right = (cellIndexToCheck + 1) % rowLength == 0
-        ? cellIndexToCheck - (rowLength - 1)
-        : cellIndexToCheck + 1;
-    final top = cellIndexToCheck <= (rowLength - 1)
-        ? worldSize - (rowLength - cellIndexToCheck).abs()
-        : cellIndexToCheck - rowLength;
-    final bottom = cellIndexToCheck >= (worldSize - rowLength)
-        ? ((worldSize - rowLength) - cellIndexToCheck).abs()
-        : cellIndexToCheck + rowLength;
-    final topLeft = top % rowLength == 0 ? top + (rowLength - 1) : top - 1;
-    final topRight =
-        (top + 1) % rowLength == 0 ? top - (rowLength - 1) : top + 1;
-    final bottomLeft =
-        bottom % rowLength == 0 ? bottom + (rowLength - 1) : bottom - 1;
-    final bottomRight =
-        (bottom + 1) % rowLength == 0 ? bottom - (rowLength - 1) : bottom + 1;
-    return _boolToInt(_world[left]) +
-        _boolToInt(_world[right]) +
-        _boolToInt(_world[top]) +
-        _boolToInt(_world[bottom]) +
-        _boolToInt(_world[topLeft]) +
-        _boolToInt(_world[topRight]) +
-        _boolToInt(_world[bottomLeft]) +
-        _boolToInt(_world[bottomRight]);
+  void compute() {
+    if (_playing == false) return;
+    List<List<bool>> nextGen = createEmptyCells();
+    for (int i = 0; i < columnsCount; i++) {
+      for (int j = 0; j < rowsCount; j++) {
+        final state = _world[i][j];
+
+        final niegbours = countNieghbours(i, j);
+
+        if (state == false && niegbours == 3) {
+          nextGen[i][j] = true;
+        } else if (state == true && (niegbours < 2 || niegbours > 3)) {
+          nextGen[i][j] = false;
+        } else {
+          nextGen[i][j] = state;
+        }
+      }
+    }
+    _world = nextGen;
   }
 
-  int _boolToInt(bool input) {
-    return input ? 1 : 0;
+  int countNieghbours(int x, int y) {
+    int sum = 0;
+    for (int i = -1; i < 2; i++) {
+      for (int j = -1; j < 2; j++) {
+        final col = (x + i + columnsCount) % columnsCount;
+        final row = (y + j + rowsCount) % rowsCount;
+        sum += _world[col][row].toInt();
+      }
+    }
+
+    sum -= _world[x][y].toInt();
+    return sum;
   }
 }

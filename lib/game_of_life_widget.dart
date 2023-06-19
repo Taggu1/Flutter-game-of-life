@@ -1,86 +1,98 @@
-import 'dart:core';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
-import 'package:flutter_game_of_life/game_board.dart';
 import 'package:flutter_game_of_life/game_of_life.dart';
 import 'package:touchable/touchable.dart';
 
 import 'board_painter.dart';
 
 class GameOfLifeWidget extends StatefulWidget {
-  const GameOfLifeWidget({super.key});
+  final double width;
+  final double height;
+  const GameOfLifeWidget({
+    super.key,
+    required this.width,
+    required this.height,
+  });
 
   @override
-  _GameOfLifeWidgetState createState() => _GameOfLifeWidgetState();
+  State<GameOfLifeWidget> createState() => _GameOfLifeWidgetState();
 }
 
-class _GameOfLifeWidgetState extends State<GameOfLifeWidget> {
-  final _game = GameOfLife();
+class _GameOfLifeWidgetState extends State<GameOfLifeWidget>
+    with SingleTickerProviderStateMixin {
+  late GameOfLife game;
 
-  late Size _cellSize;
+  late Timer timer;
+
+  double get width => widget.width;
+  double get height => widget.height;
   @override
   void initState() {
     super.initState();
-    //Fullscreen display (still including appbar)
-    _game.resetWorld();
-  }
 
-  void _toggleGame() {
-    setState(() {
-      _game.toggleGame();
-    });
-  }
+    game = GameOfLife(
+      cellSize: 20,
+      columnsCount: (width / 20).floor(),
+      rowsCount: (height / 20).floor(),
+    );
 
-  void _resetGame() {
-    setState(() {
-      _game.resetWorld();
+    timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      setState(() {
+        game.compute();
+      });
     });
   }
 
   @override
-  Widget build(BuildContext contGameOfLifeext) {
-    final screenSize = MediaQuery.of(context).size;
-    _cellSize = Size(screenSize.width / GameOfLife.rowLength,
-        (screenSize.height) / (GameOfLife.worldSize / GameOfLife.rowLength));
-
-    return Scaffold(
-      body: StreamBuilder<double>(
-        stream: _game.stateController.stream,
-        builder: (context, snapshot) {
-          print(snapshot);
-          return GameBoard(
-            game: _game,
-            cellSize: _cellSize,
-          );
-        },
-      ),
-      floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: ExpandableFab(
-        children: [
-          FloatingActionButton.small(
-            onPressed: _toggleGame,
-            tooltip: 'Start/Stop',
-            child: _game.running
-                ? const Icon(Icons.pause)
-                : const Icon(Icons.play_arrow),
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          height: height,
+          width: width,
+          child: CanvasTouchDetector(
+            builder: (context) {
+              return CustomPaint(
+                painter: BoardPainter(context, game: game),
+              );
+            },
+            gesturesToOverride: const [
+              GestureType.onTapDown,
+            ],
           ),
-          FloatingActionButton.small(
-            heroTag: null,
-            onPressed: _resetGame,
-            child: const Icon(Icons.restart_alt),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(
+          height: 23,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                game.switchGameState();
+                setState(() {});
+              },
+              child: Text(
+                game.playing ? "Stop" : "Start",
+              ),
+            ),
+            SizedBox(
+              width: 20,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                game.reset();
+                setState(() {});
+              },
+              child: const Text(
+                "Reset",
+              ),
+            ),
+          ],
+        )
+      ],
     );
   }
 }
-
-
-// FloatingActionButton(
-//         onPressed: _toggleGame,
-//         tooltip: 'Start/Stop',
-//         child: _game.running
-//             ? const Icon(Icons.pause)
-//             : const Icon(Icons.play_arrow),
-//       ),

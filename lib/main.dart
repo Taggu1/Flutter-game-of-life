@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_game_of_life/board_painter.dart';
 import 'package:flutter_game_of_life/game_of_life.dart';
 import 'package:flutter_game_of_life/game_of_life_widget.dart';
 
@@ -11,17 +12,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final size = MediaQuery.of(context).size;
     return MaterialApp(
       theme: ThemeData(
-        primaryColor: Colors.amber,
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color.fromRGBO(49, 50, 68, 1),
-          foregroundColor: Color.fromRGBO(205, 214, 244, 1),
-        ),
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.dark,
+      darkTheme: ThemeData.dark(
+        useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: GameOfLifeWidget(),
+      home: GameOfLifeWidget(
+        height: 500,
+        width: size.width,
+      ),
     );
   }
 }
